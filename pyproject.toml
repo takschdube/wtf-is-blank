@@ -1,0 +1,9 @@
+[project]
+name = "wtf-is-blank"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "feedparser>=6.0.12",
+]
