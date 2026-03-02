@@ -32,7 +32,8 @@ def download_posts(feed_url, output_dir='substack_posts', limit=None, force=Fals
     
     try:
         req = urllib.request.Request(feed_url, headers={
-            'User-Agent': 'Mozilla/5.0 (compatible; SubstackPostDownloader/1.0)'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
         })
         with urllib.request.urlopen(req, timeout=30) as response:
             feed_content = response.read()
