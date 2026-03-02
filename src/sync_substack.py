@@ -7,6 +7,7 @@ import feedparser
 import os
 import re
 import argparse
+import urllib.request
 from datetime import datetime
 
 def clean_filename(title):
@@ -30,7 +31,12 @@ def download_posts(feed_url, output_dir='substack_posts', limit=None, force=Fals
     print(f"📡 Fetching posts from {feed_url}...")
     
     try:
-        feed = feedparser.parse(feed_url)
+        req = urllib.request.Request(feed_url, headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; SubstackPostDownloader/1.0)'
+        })
+        with urllib.request.urlopen(req, timeout=30) as response:
+            feed_content = response.read()
+        feed = feedparser.parse(feed_content)
     except Exception as e:
         print(f"❌ Error fetching feed: {e}")
         return
