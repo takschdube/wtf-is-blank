@@ -7,7 +7,9 @@ import feedparser
 import os
 import re
 import argparse
+import time
 import urllib.request
+import urllib.error
 from datetime import datetime
 
 def clean_filename(title):
@@ -30,17 +32,33 @@ def download_posts(feed_url, output_dir='substack_posts', limit=None, force=Fals
     """Download posts from Substack RSS feed"""
     print(f"📡 Fetching posts from {feed_url}...")
     
-    try:
-        req = urllib.request.Request(feed_url, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-        })
-        with urllib.request.urlopen(req, timeout=30) as response:
-            feed_content = response.read()
-        feed = feedparser.parse(feed_content)
-    except Exception as e:
-        print(f"❌ Error fetching feed: {e}")
+    feed_content = None
+    for attempt in range(1, 4):
+        try:
+            req = urllib.request.Request(feed_url, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            })
+            with urllib.request.urlopen(req, timeout=30) as response:
+                feed_content = response.read()
+            break
+        except urllib.error.HTTPError as e:
+            if e.code == 403 and attempt < 3:
+                wait = 2 ** attempt
+                print(f"⚠️  HTTP 403 on attempt {attempt}/3, retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"❌ Error fetching feed: {e}")
+                return
+        except Exception as e:
+            print(f"❌ Error fetching feed: {e}")
+            return
+
+    if feed_content is None:
+        print("❌ Failed to fetch feed after retries")
         return
+
+    feed = feedparser.parse(feed_content)
     
     if not feed.entries:
         print("❌ No posts found in feed")
